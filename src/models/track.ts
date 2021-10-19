@@ -19,6 +19,20 @@ class Track {
     this.artist = artist;
     this.releaseDate = releaseDate;
   }
+
+  hydrate() {
+    var memento = JSON.stringify(this);
+    return memento;
+  }
+
+  dehydrate(memento: string) {
+    var m = JSON.parse(memento);
+    this.id = m.id;
+    this.name = m.name;
+    this.artist = m.artist;
+    this.length = m.length;
+    this.releaseDate = m.releaseDate;
+  }
 }
 
 export default Track;

@@ -1,38 +1,51 @@
 import * as React from "react";
 import Track from '../models/track'
 import TrackForm from "../components/TrackForm";
+import Caretaker from "../models/caretaker";
 import "./styles.scss";
 
 // markup
 const IndexPage = () => {
   const [updateTrack, setUpdateTrack] = React.useState({});
-  const [tracks, setTracks] = React.useState([]);
+  const [tracks, setTracks] = React.useState({});
 
-  const upsertTrack = (track) => {
-    if (!track.id) {
+  const upsertTrack = (newTrack) => {
+    setUpdateTrack({});
+    if (!newTrack.id) {
       return setTracks(prevState => {
-        const newState = [...prevState];
-        const trackModel = new Track(new Date().getTime(), track.name, track.artist, track.length, track.releaseDate);
-        newState.push(trackModel);
+        const newState = { ...prevState };
+        const trackModel = new Track(new Date().getTime(), newTrack.name, newTrack.artist, newTrack.length, newTrack.releaseDate);
+        newState[trackModel.id] = { track: trackModel, versions: new Caretaker({}) };
         return newState;
       });
     }
 
     setTracks(prevState => {
-      const newState = [...prevState];
-      const index = prevState.findIndex((t) => t.id === track.id);
-      const trackModel = prevState[index];
-      trackModel.name = track.name;
-      trackModel.artist = track.artist;
-      trackModel.length = track.length;
-      trackModel.releaseDate = track.releaseDate;
+      const newState = { ...prevState };
+      const { track, versions } = prevState[newTrack.id];
 
-      newState[index] = trackModel;
+      versions.add(new Date().getTime(), track.hydrate());
+
+      track.name = newTrack.name;
+      track.artist = newTrack.artist;
+      track.length = newTrack.length;
+      track.releaseDate = newTrack.releaseDate;
+
+      newState[newTrack.id] = { track, versions };
       return newState;
     })
   };
 
   const onEdit = (track: Track) => {
+    setUpdateTrack(track);
+  }
+
+  const onSelectMemento = (versions: Caretaker, key: number) => {
+    if (!key) return;
+
+    const memento = versions.get(key);
+    const track = new Track();
+    track.dehydrate(memento);
     setUpdateTrack(track);
   }
 
@@ -48,14 +61,25 @@ const IndexPage = () => {
       <section className="section">
         <div>
           <p>Created tracks:</p>
-          {tracks.map((track) => {
+          {Object.values(tracks).map(({ track, versions }) => {
             return (
-              <div className="is-clickable" onClick={(e) => { e.preventDefault; onEdit(track) }}>{track.name} | {track.artist} | {track.length} seconds | {track.releaseDate}</div>
+              <>
+                <div className="is-clickable" onClick={(e) => { e.preventDefault; onEdit(track) }}>{track.name} | {track.artist} | {track.length} seconds | {track.releaseDate}</div>
+                {Object.keys(versions.mementos).length > 0 && (
+                  <select className="select" onChange={(e) => { e.preventDefault(); onSelectMemento(versions, e.target.value) }}>
+                    <option>Choose a time to restore</option>
+                    {Object.keys(versions.mementos).map(key => {
+                      return <option value={key}>{key}</option>
+                    })}
+                  </select>
+                )
+                }
+              </>
             )
           })}
         </div>
       </section>
-    </main>
+    </main >
   );
 };
 
