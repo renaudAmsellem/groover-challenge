@@ -13,7 +13,7 @@ const TrackForm = (props: { upsertTrack: Function, track: Track }) => {
     const [error, setError] = React.useState<string>("");
 
     React.useEffect(() => {
-        if (props.track.id) {
+        if (props.track && props.track.id) {
             setState(props.track);
         }
     }, [props.track])
