@@ -3,5 +3,5 @@ module.exports = {
     siteUrl: "https://www.yourdomain.tld",
     title: "Groover Challenge",
   },
-  plugins: [],
+  plugins: ["gatsby-plugin-sass", "gatsby-plugin-typescript"],
 };
